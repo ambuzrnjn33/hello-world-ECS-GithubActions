@@ -43,8 +43,8 @@ jobs:
           tags: |
             ambuzrnjn33/demo-interview-app:latest
 
-      - name: Push Docker image to DOckerHub
-        if: github.refs == 'refs/heads/main'
+      - name: Push Docker image to DockerHub
+        if: github.ref == 'refs/heads/main'
         run: |
           docker push ambuzrnjn33/demo-interview-app:latest
 
