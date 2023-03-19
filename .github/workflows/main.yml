@@ -22,10 +22,10 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-        aws-region: ${{ env.AWS_REGION }}
-        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-        aws-account-id: ${{ env.AWS_ACCOUNT_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-account-id: ${{ env.AWS_ACCOUNT_ID }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
