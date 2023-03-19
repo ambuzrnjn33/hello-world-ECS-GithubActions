@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-2
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-account-id: ${{ env.AWS_ACCOUNT_ID }}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and tag Docker image
+        id: build-image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: |
+            ambuzrnjn33/demo-interview-app:latest
+
+      - name: Push Docker image to DOckerHub
+        if: github.refs == 'refs/heads/main'
+        run: |
+          docker push ambuzrnjn33/demo-interview-app:latest
+
+      - name: Create task definition
+        id: create-task-def
+        run: |
+          echo '{"family":"my-demo-app","containerDefinitions":[{"name":"my-demo-app","image":"ambuzrnjn33/demo-interview-app:latest","portMappings":[{"containerPort":3000,"hostPort":3000}]}],"cpu":"1024","memory":"2048","networkMode":"awsvpc","requiresCompatibilities":["FARGATE"],"executionRoleArn":"arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/ecs-task-execution","taskRoleArn":"arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/ecs-task-execution"}' > taskdef.json
+
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          cluster: my-demo-app-cluster
+          service: my-demo-app-service
+          task-definition: taskdef.json
